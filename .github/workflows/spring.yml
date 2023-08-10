@@ -4,7 +4,7 @@ on: # Event 감지
     branches: main
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout source code. # Repo checkout
         uses: actions/checkout@v2
@@ -17,8 +17,6 @@ jobs:
 
       - name: Build # React Build
         run: yarn build
-        env:
-          CI: ""
 
       - name: zip create
         # zip 파일을 만듭니다(파일명은 자유, 대신 아래 workflow에 적을 파일명과 동일하게 맞춰주세요).
@@ -44,4 +42,4 @@ jobs:
           --application-name myApplicationToCICD
           --deployment-config-name CodeDeployDefault.AllAtOnce
           --deployment-group-name a2Cartag
-          --s3-location bucket=www.a2cartag.com,key=build-fe.zip,bundleType=zip
+          --s3-location bucket=www.a2cartag.com,key=test/build-fe.zip,bundleType=zip
