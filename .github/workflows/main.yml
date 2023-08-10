@@ -9,6 +9,7 @@ env:
   S3_BUCKET_NAME : a2cartagspring
   CODE_DEPLOY_APPLICATION_NAME: myApplicationToCICD
   CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: a2Cartag
+  working-directory : ./backend
 
 jobs:
   build:
@@ -24,10 +25,11 @@ jobs:
           java-version: 11 #현재 프로젝트는 자바 11버전을 사용하고 있다.
 
       - uses: actions/checkout@v2
-
+      
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
         shell: bash
+        working-directory : ${{ env.working-directory }}
 
       - name: Build with Gradle
         run: ./gradlew build
