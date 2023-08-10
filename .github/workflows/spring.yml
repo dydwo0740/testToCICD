@@ -1,29 +1,26 @@
-name: Test deploy                    # Workflow 이름
-on:                                  # Event 감지
+name: deploy
+on:
   push:
     branches:
-      - main                        
-jobs:                                # Job 설정
-  build:
-    runs-on:  ubuntu-latest
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code.   # Repo checkout
+      - name: 소스코드 체크아웃
         uses: actions/checkout@v3
-      
-      - name: Check Node v            # Node v 확인
-        run: node -v
-        
-      - name: Install dependencies    # 의존 파일 설치
-        run: npm install
-        working-directory : ./frontend
-      
-      - name: Generate build          # React Build
-        run: npm run build
-        working-directory : ./frontend
-      
-      - name: Deploy                  # Upload build file to S3
+      - name: AWS IAM 사용자 설정
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2 
+      - name: 리액트 빌드
+        run: |
+          npm install
+          npm run build
+      - name: 빌드한 파일 S3에 업로드
+        run: aws s3 sync build/ s3://www.a2cartag.com --acl public-read
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ap-northeast-2
-        run: aws s3 sync ./dist http://www.a2cartag.com.s3-website.ap-northeast-2.amazonaws.com
