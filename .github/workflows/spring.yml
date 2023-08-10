@@ -45,7 +45,7 @@ jobs:
           EOF
           
       - name: zip distributions
-        run: zip -r together-zip.zip ./client/dist ./server ./appspec.yml ./scripts
+        run: zip -r together-zip.zip ./frontend/dist ./frontend ./frontend/appspec.yml ./frontend/scripts
 
       - name: AWS configure credentials
         uses: aws-actions/configure-aws-credentials@v1
