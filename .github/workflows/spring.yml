@@ -26,4 +26,4 @@ jobs:                                # Job 설정
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ap-northeast-2
-        run: aws s3 sync ./dist s3://www.a2cartag.com
+        run: aws s3 sync ./dist http://www.a2cartag.com.s3-website.ap-northeast-2.amazonaws.com
