@@ -63,4 +63,4 @@ jobs:
           --application-name myApplicationToCICD
           --deployment-config-name CodeDeployDefault.AllAtOnce
           --deployment-group-name a2Cartag
-          --s3-location bucket=together-zip,bundleType=zip,key=public/together-zip.zip
+          --s3-location bucket=www.a2cartag.com,bundleType=zip,key=public/together-zip.zip
