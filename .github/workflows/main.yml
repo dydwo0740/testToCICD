@@ -59,10 +59,10 @@ jobs:
           --s3-location s3://$BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip \
           --source .
 
-    - name: Code Deploy To EC2 instance
-        run: aws deploy create-deployment 
-                --application-name $CODE_DEPLOY_APP_NAME 
-                --deployment-config-name CodeDeployDefault.AllAtOnce
-                --deployment-group-name $DEPLOYMENT_GROUP_NAME 
-                --s3-location bucket=$BUCKET_NAME,bundleType=zip,key=$PROJECT_NAME/$GITHUB_SHA.zip
-# --------------------------추가
+   - name: Deploy to AWS EC2 from S3
+      run: |
+        aws deploy create-deployment \
+          --application-name ${{ env.CODE_DEPLOY_APP_NAME }} \
+          --deployment-config-name CodeDeployDefault.AllAtOnce \
+          --deployment-group-name ${{ env.DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=$BUCKET_NAME,key=$PROJECT_NAME/$GITHUB_SHA.zip,bundleType=zip
