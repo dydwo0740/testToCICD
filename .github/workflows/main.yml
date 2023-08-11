@@ -50,8 +50,14 @@ jobs:
          aws-secret-access-key: ${{ secrets.AWS_PRIVATE_ACCESS_KEY }}
          aws-region: ap-northeast-2
 
-    - name: Upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.zip s3://$BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip
+    - name: Upload to AWS S3
+      working-directory: ${{ env.wd }}
+      run: |
+        aws deploy push \
+          --application-name ${{ env.CODE_DEPLOY_APP_NAME }} \
+          --ignore-hidden-files \
+          --s3-location s3://$BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip \
+          --source .
 
     - name: Code Deploy To EC2 instance
         run: aws deploy create-deployment 
