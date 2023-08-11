@@ -1,67 +1,42 @@
-# workflow의 이름
-name: CD
-
-
-# 해당 workflow가 언제 실행될 것인지에 대한 트리거를 지정
+name: CICD Test
+run-name: Running
 on:
   push:
-    branches: [ main ] # main branch로 push 될 때 실행됩니다.
-    
+    branches:
+      - main
 
-# 해당 yml 내에서 사용할 key - value
 env:
-  S3_BUCKET_NAME: a2cartagspring
-  PROJECT_NAME: please
-  
-# workflow는 한개 이상의 job을 가지며, 각 job은 여러 step에 따라 단계를 나눌 수 있습니다.
+  AWS_REGION: ap-northeast-2
+  AWS_S3_BUCKET: a2cartagspring
+  AWS_CODE_DEPLOY_APPLICATION: myApplicationToCICD
+  AWS_CODE_DEPLOY_GROUP: a2Cartag
+
 jobs:
-  build:
-    name: CD
-    # 해당 jobs에서 아래의 steps들이 어떠한 환경에서 실행될 것인지를 지정합니다.
+  build-with-gradle:
     runs-on: ubuntu-latest
-
     steps:
-    # 작업에서 액세스할 수 있도록 $GITHUB_WORKSPACE에서 저장소를 체크아웃합니다.
-      - uses: actions/checkout@v2
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'zulu'
-          
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-        shell: bash
-        working-directory : ./backend
-      
-      - name: Build with Gradle
-        run: ./gradlew build
-        shell: bash
-        working-directory : ./backend
-        
-      - name: Make zip file
-        run: zip -r ./$GITHUB_SHA.zip .
-        shell: bash
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-          
-      
-      # S3에 업로드
-      - name: Upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.zip s3://$S3_BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip
-        
-     # Deploy
-      - name: Deploy
-        run: |
-          aws deploy create-deployment \
-          --application-name myApplicationToCICD \
-          --deployment-config-name CodeDeployDefault.AllAtOnce \
-          --deployment-group-name a2Cartag \
-          --file-exists-behavior OVERWRITE \
-          --s3-location bucket=project-bucket-v1,bundleType=zip,key=cicdtest/$GITHUB_SHA.zip \
-          --region ap-northeast-2 \
+    - name: production 브랜치로 이동
+      uses: actions/checkout@v3
+      with:
+        ref: production
+    - name: JDK 11 설치
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'corretto'
+    - name: gradlew에 실행 권한 부여
+      run: chmod +x ./gradlew
+      working-directory : ./backend
+    - name: 프로젝트 빌드
+      run: ./gradlew clean build -x test
+    - name: AWS credential 설정
+      uses: aws-actions/configure-aws-credentials@v1
+      working-directory : ./backend
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: S3에 업로드
+      run: aws deploy push --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --ignore-hidden-files --s3-location s3://$AWS_S3_BUCKET/please/$GITHUB_SHA.zip --source .
+    - name: EC2에 배포
+      run: aws deploy create-deployment --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name ${{ env.AWS_CODE_DEPLOY_GROUP }} --s3-location bucket=$AWS_S3_BUCKET,key=please/$GITHUB_SHA.zip,bundleType=zip
