@@ -13,10 +13,10 @@ permissions:
 
 env:
   AWS_REGION: ap-northeast-2
-  S3_BUCKET_NAME: caart-deploy-s3-bucket
-  CODE_DEPLOY_APPLICATION_NAME: caArt-codedeploy-app
-  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: caArt-codedeploy-group
-  APPLICATION: ${{ secrets.APPLICATION }}
+  PROJECT_NAME: please
+  S3_BUCKET_NAME: a2cartagforspringboot
+  CODE_DEPLOY_APPLICATION_NAME: myApplicationToCICD
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: a2Cartag
   wd: ./backend
 
 jobs:
@@ -29,18 +29,11 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up JDK 11
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'temurin'
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
 
-    - name: Copy application.yml
-      working-directory: ${{ env.wd }}
-      run: |
-        mkdir src/main/resources
-        touch ./src/main/resources/application.yml
-        echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
-        
+   
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
   
@@ -54,8 +47,8 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+        aws-secret-access-key: ${{ secrets.AWS_PRIVATE_ACCESS_KEY }}
+        aws-region: ap-northeast-2
 
     - name: Upload to AWS S3
       working-directory: ${{ env.wd }}
@@ -72,4 +65,4 @@ jobs:
           --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
           --deployment-config-name CodeDeployDefault.AllAtOnce \
           --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
-          --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
+          --s3-location bucket=$S3_BUCKET_NAME,key=$PROJECT_NAME/$GITHUB_SHA.zip,bundleType=zip
