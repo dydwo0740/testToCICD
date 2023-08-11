@@ -1,42 +1,49 @@
-name: CICD Test
-run-name: Running
 on:
   push:
     branches:
       - main
 
+name: Deploy String boot to Amazon EC2
 env:
-  AWS_REGION: ap-northeast-2
-  AWS_S3_BUCKET: a2cartagspring
-  AWS_CODE_DEPLOY_APPLICATION: myApplicationToCICD
-  AWS_CODE_DEPLOY_GROUP: a2Cartag
+  PROJECT_NAME: please
 
 jobs:
-  build-with-gradle:
-    runs-on: ubuntu-latest
+  deploy:
+    name: DEPLOY
+    runs-on: ubuntu-18.04
+
     steps:
-    - name: production 브랜치로 이동
-      uses: actions/checkout@v3
-      with:
-        ref: production
-    - name: JDK 11 설치
-      uses: actions/setup-java@v3
-      with:
-        java-version: '11'
-        distribution: 'corretto'
-    - name: gradlew에 실행 권한 부여
-      run: chmod +x ./gradlew
-      working-directory : ./backend
-    - name: 프로젝트 빌드
-      run: ./gradlew clean build -x test
-      working-directory : ./backend
-    - name: AWS credential 설정
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-region: ${{ env.AWS_REGION }}
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    - name: S3에 업로드
-      run: aws deploy push --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --ignore-hidden-files --s3-location s3://$AWS_S3_BUCKET/please/$GITHUB_SHA.zip --source .
-    - name: EC2에 배포
-      run: aws deploy create-deployment --application-name ${{ env.AWS_CODE_DEPLOY_APPLICATION }} --deployment-config-name CodeDeployDefault.AllAtOnce --deployment-group-name ${{ env.AWS_CODE_DEPLOY_GROUP }} --s3-location bucket=$AWS_S3_BUCKET,key=please/$GITHUB_SHA.zip,bundleType=zip
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.1
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        shell: bash
+        working-directory: ./backend
+
+      - name: Build with Gradle
+        run: ./gradlew build
+        shell: bash
+         working-directory: ./backend
+
+      - name: Make zip file
+        run: zip -qq -r ./$GITHUB_SHA.zip .
+        shell: bash
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Upload to S3
+        run: aws s3 cp --region ap-northeast-2 ./$GITHUB_SHA.zip s3://ia2cartagspring/$PROJECT_NAME/$GITHUB_SHA.zip
+
+      - name: Code Deploy
+        run: aws deploy create-deployment --application-name myApplicationToCICD --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name a2Cartag --s3-location bucket=a2cartagspring,bundleType=zip,key=$PROJECT_NAME/$GITHUB_SHA.zip
