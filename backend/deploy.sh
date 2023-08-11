@@ -1,24 +1,28 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-REPOSITORY=/home/ec2-user/cicdproject
-cd $REPOSITORY
+PROJECT_ROOT="/home/ubuntu/caart"
+JAR_FILE="$PROJECT_ROOT/caart-webapp.jar"
 
-APP_NAME=demo
-JAR_NAME=$(ls $REPOSITORY/build/libs/ | grep '.jar' | tail -n 1)
-JAR_PATH=$REPOSITORY/build/libs/$JAR_NAME
+APP_LOG="$PROJECT_ROOT/application.log"
+ERROR_LOG="$PROJECT_ROOT/error.log"
+DEPLOY_LOG="$PROJECT_ROOT/deploy.log"
 
-CURRENT_PID=$(pgrep -fl java)
+TIME_NOW=$(date +%c)
 
-if [ -z "$CURRENT_PID" ]; then
-    echo "NOT RUNNING"
+CURRENT_PID=$(pgrep -f $JAR_FILE)
+
+if [ -z $CURRENT_PID ]; then
+  echo "$TIME_NOW > 실행 중인 애플리케이션이 없습니다." >> $DEPLOY_LOG
 else
-    echo "> kill -9 $CURRENT_PID"
-    kill -15 $CURRENT_PID
-    sleep 5
+  echo "$TIME_NOW > 실행 중인 $CURRENT_PID 애플리케이션을 종료합니다." >> $DEPLOY_LOG
+  kill -15 $CURRENT_PID
 fi
 
-echo "> $JAR_PATH 에 실행권한 추가"
-chmod +x $JAR_PATH
+echo "$TIME_NOW > $JAR_FILE 파일 생성" >> $DEPLOY_LOG
+cp $PROJECT_ROOT/build/libs/*.jar $JAR_FILE
 
-echo "> $JAR_PATH 배포"
-nohup java -jar -Duser.timezone=Asia/Seoul $JAR_PATH > $REPOSITORY/nohup.out 2>&1 &
+echo "$TIME_NOW > $JAR_FILE 파일 실행" >> $DEPLOY_LOG
+nohup java -jar $JAR_FILE > $APP_LOG 2> $ERROR_LOG &
+
+CURRENT_PID=$(pgrep -f $JAR_FILE)
+echo "$TIME_NOW > 실행된 프로세스 아이디 $CURRENT_PID 입니다." >> $DEPLOY_LOG
