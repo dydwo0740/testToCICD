@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-PROJECT_ROOT="/home/ubuntu/caart"
-JAR_FILE="$PROJECT_ROOT/caart-webapp.jar"
+PROJECT_ROOT="/home/ec2-user/cicdproject"
+JAR_FILE="$PROJECT_ROOT/testcicde.jar"
 
 APP_LOG="$PROJECT_ROOT/application.log"
 ERROR_LOG="$PROJECT_ROOT/error.log"
