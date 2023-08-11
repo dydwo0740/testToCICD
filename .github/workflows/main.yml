@@ -12,18 +12,18 @@ permissions:
   contents: read
 
 env:
-  PROJECT_NAME: please
-  BUCKET_NAME: a2cartagforspringboot
-  CODE_DEPLOY_APP_NAME: myApplicationToCICD
-  DEPLOYMENT_GROUP_NAME: a2Cartag
+  AWS_REGION: ap-northeast-2
+  S3_BUCKET_NAME: caart-deploy-s3-bucket
+  CODE_DEPLOY_APPLICATION_NAME: caArt-codedeploy-app
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: caArt-codedeploy-group
+  APPLICATION: ${{ secrets.APPLICATION }}
   wd: ./backend
-
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-    
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -34,7 +34,13 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
 
-
+    - name: Copy application.yml
+      working-directory: ${{ env.wd }}
+      run: |
+        mkdir src/main/resources
+        touch ./src/main/resources/application.yml
+        echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
+        
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
   
@@ -47,23 +53,23 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_PRIVATE_ACCESS_KEY }}
-         aws-region: ap-northeast-2
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Upload to AWS S3
       working-directory: ${{ env.wd }}
       run: |
         aws deploy push \
-          --application-name ${{ env.CODE_DEPLOY_APP_NAME }} \
+          --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
           --ignore-hidden-files \
-          --s3-location s3://$BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip \
+          --s3-location s3://$S3_BUCKET_NAME/$GITHUB_SHA.zip \
           --source .
 
-   - name: Deploy to AWS EC2 from S3
+    - name: Deploy to AWS EC2 from S3
       run: |
         aws deploy create-deployment \
-          --application-name ${{ env.CODE_DEPLOY_APP_NAME }} \
+          --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
           --deployment-config-name CodeDeployDefault.AllAtOnce \
-          --deployment-group-name ${{ env.DEPLOYMENT_GROUP_NAME }} \
-          --s3-location bucket=$BUCKET_NAME,key=$PROJECT_NAME/$GITHUB_SHA.zip,bundleType=zip
+          --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
