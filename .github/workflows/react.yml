@@ -28,7 +28,7 @@ jobs: # CI/CD 세부 동작 (Job) 설정.
           aws-region: ap-northeast-2 # 깃허브 레포지토리 Secrets에 등록한 AWS_REGION.
       #s3,codeDeploy 경로와 이름 알맞게 입력
       - name: upload to S3
-        run: aws s3 cp --region ap-northeast-2 ./together-zip.zip s3://www.a2cartag.com
+        run: aws s3 cp --region ap-northeast-2 ./test-build-zip.zip s3://www.a2cartag.com
       - name: deploy with AWS codeDeploy
         run: aws deploy create-deployment
           --application-name myApplicationToCICD
