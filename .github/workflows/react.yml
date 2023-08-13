@@ -15,6 +15,7 @@ jobs: # CI/CD 세부 동작 (Job) 설정.
         working-directory: ./frontend
         run: yarn install --frozen-lockfile
       - name: Build # 빌드.
+        working-directory: ./frontend
         run: yarn build
       - name: zip create # S3에 올릴 zip 파일 생성. (빌드한 프로젝트를 압축)
         run: zip -qq -r ./test-build.zip . # 파일명은 자유, 대신 아래 workflow에 적을 파일명과 동일하게 맞춰줄 것.
