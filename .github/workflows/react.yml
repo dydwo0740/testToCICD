@@ -2,7 +2,7 @@ name: Deploy # Workflow 이름.
 on: # CICD 이벤트 감지.
   push:
     branches:
-      - master # CI/CD를 동작하게 할 브랜치 이름. 즉 master 브랜치에 push가 일어나면 감지하여 다음과 같은 Jobs를 실행한다.
+      - main # CI/CD를 동작하게 할 브랜치 이름. 즉 master 브랜치에 push가 일어나면 감지하여 다음과 같은 Jobs를 실행한다.
 jobs: # CI/CD 세부 동작 (Job) 설정.
   build:
     runs-on: ubuntu-latest # Ubuntu 니까 ubuntu 20.04로 설정.
