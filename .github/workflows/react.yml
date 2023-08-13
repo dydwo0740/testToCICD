@@ -34,4 +34,4 @@ jobs: # CI/CD 세부 동작 (Job) 설정.
           --application-name myApplicationToCICD
           --deployment-config-name CodeDeployDefault.AllAtOnce
           --deployment-group-name a2Cartag
-          --s3-location bucket=www.a2cartag.com,bundleType=zip,key=together-zip.zip
+          --s3-location bucket=www.a2cartag.com,bundleType=zip,key=test-build-zip.zip
