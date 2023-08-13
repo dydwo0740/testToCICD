@@ -23,7 +23,7 @@ jobs: # CI/CD 세부 동작 (Job) 설정.
       - name: Configure AWS credentials # aws 인증 확인.
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }} # 깃허브 레포지토리 Secrets에 등록한 AWS_ACCESS_KEY.
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # 깃허브 레포지토리 Secrets에 등록한 AWS_ACCESS_KEY.
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # 깃허브 레포지토리 Secrets에 등록한 AWS_SECRET_ACCESS_KEY.
           aws-region: ap-northeast-2 # 깃허브 레포지토리 Secrets에 등록한 AWS_REGION.
       #s3,codeDeploy 경로와 이름 알맞게 입력
