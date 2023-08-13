@@ -17,7 +17,7 @@ hooks:
 #  BeforeInstall:
 #  AfterInstall:
   ApplicationStart:
-    - location: deploy.sh
+    - location: scripts/start.sh
       timeout: 60
       runas: ubuntu
 #  ValidateService:
