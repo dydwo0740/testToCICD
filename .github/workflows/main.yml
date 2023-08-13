@@ -19,6 +19,7 @@ env:
   S3_BUCKET_NAME: a2cartagforspringboot
   CODE_DEPLOY_APPLICATION_NAME: myApplicationToCICD
   CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: a2Cartag
+  APPLICATION: ${{ secrets.APPLICATION }}
   wd: ./backend
 
 jobs:
@@ -35,6 +36,13 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
+
+    - name: Copy application.yml
+      working-directory: ${{ env.wd }}
+      run: |
+        mkdir src/main/resources
+        touch ./src/main/resources/application.yml
+        echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.yml
 
    
     - name: Setup Gradle
