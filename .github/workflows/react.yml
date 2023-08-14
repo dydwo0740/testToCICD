@@ -1,63 +1,58 @@
+name: CI(Frontend)
 
-# This is a basic workflow to help you get started with Actions
-
-name: front CD
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the dev branch
 on:
-  push:
-    branches: main
-  pull_request:
-    branches: main
+    workflow_dispatch:
+    push:
+        branches: ["main", "dev"]
+        paths:
+            - "frontend/**"
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./frontend
-    strategy:
-      matrix:
-        node-version: [20.x]
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+    build:
+        runs-on: ubuntu-latest
 
-      - name: pwd 확인
-        run: pwd
+        defaults:
+            run:
+                working-directory: ./frontend
 
-      - name: node.js ${{ matrix.node-version }} 설치
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
+        steps:
+            - name: VM으로 파일을 전송합니다.
+              uses: actions/checkout@v3
 
-      - name: install npm
-        run: npm install
+            - name: Node.js 환경을 셋팅합니다.
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 20
 
-      - name: npm build
-        run: npm run build
-        env:
-          CI: false
+            - name: 의존성 패키지들을 설치합니다.
+              run: npm ci
 
-      - name: zip 생성
-        run: zip -qq -r ./build.zip .
-        shell: bash
+            - name: 빌드를 실행합니다.
+              run: npm run build --if-present
 
-      - name: aws 설정
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2 
+            - name: 빌드 결과물을 artifact로 업로드합니다.
+              uses: actions/upload-artifact@v3
+              with:
+                  name: build-frontend
+                  path: Frontend/dist
 
-      - name: S3 upload
-        run: aws deploy push --application-name myApplicationToCICD --description "study-app server" --s3-location s3://www.a2cartag.com/client/build.zip --source .
+    deploy:
+        needs: build
 
-      - name: code deploy
-        run: aws deploy create-deployment --application-name myApplicationToCICD --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name a2Cartag --s3-location bucket=www.a2cartag.com,bundleType=zip,key=client/build.zip
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: 빌드 결과물을 다운로드합니다.
+              uses: actions/download-artifact@v3
+              with:
+                  name: build-frontend
+
+            - name: S3 버킷에 업로드합니다.
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              run: |
+                  aws s3 sync \
+                  . s3://www.a2cartag.com \
+                  --region ap-northeast-2 \
+                  --delete
